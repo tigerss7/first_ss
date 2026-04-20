@@ -1,4 +1,4 @@
-const CACHE = 'kimsecretary-v2';
+const CACHE = 'kimsecretary-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -24,6 +24,13 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  // Firebase 및 외부 요청은 캐시 안 함 (로그인 정상 작동 위해)
+  if (e.request.url.includes('firebase') ||
+      e.request.url.includes('google') ||
+      e.request.url.includes('gstatic')) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request))
   );
