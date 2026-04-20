@@ -163,6 +163,11 @@ if (isIOS && !isStandalone) {
 }
 
 // 4. 인증 상태 감지 (무한 로딩 방지용 예외 처리 포함)
+    if (!isStandalone && !sessionStorage.getItem('reloaded')) {
+    sessionStorage.setItem('reloaded', 'true');
+    window.location.reload();
+}
+
 auth.onAuthStateChanged(user => {
     document.getElementById('loading-screen').style.display='none';
     if(user){
