@@ -18,16 +18,21 @@
         *{box-sizing:border-box;margin:0;padding:0;font-family:var(--font);-webkit-tap-highlight-color:transparent;}
         body{background:#fff;color:#333;line-height:1.6;padding-top:calc(var(--safe-top) + 16px);padding-bottom:calc(var(--safe-bottom) + 16px);padding-left:16px;padding-right:16px;}
         .app{max-width:600px;margin:0 auto;}
-        #login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;text-align:center;}
-        .login-icon{font-size:56px;margin-bottom:16px;}
-        .login-title{font-size:24px;font-weight:bold;margin-bottom:8px;}
-        .login-sub{font-size:14px;color:#888;margin-bottom:32px;line-height:1.8;}
-        .btn-google{display:flex;align-items:center;gap:12px;background:white;border:1px solid #ddd;padding:14px 24px;border-radius:12px;cursor:pointer;font-size:15px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.08);transition:0.2s;}
-        .btn-google:hover{box-shadow:0 4px 16px rgba(0,0,0,0.12);}
-        .btn-google img{width:22px;height:22px;}
         #loading-screen{display:flex;align-items:center;justify-content:center;min-height:80vh;flex-direction:column;gap:14px;}
         .spinner{width:36px;height:36px;border:3px solid #eee;border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;}
         @keyframes spin{to{transform:rotate(360deg);}}
+        #login-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;text-align:center;padding:20px;}
+        .login-icon{font-size:56px;margin-bottom:16px;}
+        .login-title{font-size:24px;font-weight:bold;margin-bottom:8px;}
+        .login-sub{font-size:14px;color:#888;margin-bottom:32px;line-height:1.8;}
+        .btn-google{display:flex;align-items:center;gap:12px;background:white;border:1px solid #ddd;padding:14px 24px;border-radius:12px;cursor:pointer;font-size:15px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:12px;}
+        .btn-google img{width:22px;height:22px;}
+        .ios-login-box{background:#f0f7ff;border:1px solid #b6d4f7;border-radius:14px;padding:20px;max-width:320px;margin-top:8px;}
+        .ios-login-box p{font-size:13px;color:#1a5fa8;margin-bottom:14px;line-height:1.7;}
+        .ios-steps{text-align:left;margin-bottom:16px;}
+        .ios-step{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;font-size:13px;color:#333;}
+        .ios-num{width:22px;height:22px;background:#1a5fa8;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;flex-shrink:0;margin-top:1px;}
+        .btn-open-safari{background:#1a5fa8;color:white;border:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;width:100%;}
         #main-app{display:none;}
         .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:8px;}
         .header-left{display:flex;align-items:center;gap:8px;}
@@ -91,14 +96,27 @@
     <div style="font-size:13px;color:#aaa;">로그인 확인 중...</div>
 </div>
 
-<div id="login-screen" style="display:none;">
+<div id="login-screen">
     <div class="login-icon">📋</div>
     <div class="login-title">나의 완벽한 비서</div>
     <div class="login-sub">구글 계정으로 로그인하면<br>모든 기기에서 데이터가 동기화됩니다</div>
-    <button class="btn-google" onclick="loginWithGoogle()">
+
+    <!-- 일반 브라우저용 버튼 -->
+    <button class="btn-google" id="normal-login-btn" onclick="loginWithGoogle()">
         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
         Google로 로그인
     </button>
+
+    <!-- iOS 홈화면 앱 전용 안내 -->
+    <div class="ios-login-box" id="ios-standalone-guide" style="display:none;">
+        <p>아이폰 홈화면 앱에서는<br>아래 순서로 로그인해주세요</p>
+        <div class="ios-steps">
+            <div class="ios-step"><div class="ios-num">1</div><div>아래 버튼을 눌러 <b>Safari</b>로 열기</div></div>
+            <div class="ios-step"><div class="ios-num">2</div><div>Safari에서 <b>Google로 로그인</b> 탭</div></div>
+            <div class="ios-step"><div class="ios-num">3</div><div>로그인 완료 후 <b>홈 화면</b>에서 앱 다시 열기</div></div>
+        </div>
+        <button class="btn-open-safari" onclick="openInSafari()">Safari에서 열기</button>
+    </div>
 </div>
 
 <div id="main-app">
@@ -153,14 +171,30 @@ firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
 const db=firebase.firestore();
 
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone=window.navigator.standalone===true;
+
 let currentUser=null,todos=[],memos=[],unsubTodos=null,unsubMemos=null,blinker=null,sirenInterval=null;
 
 if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(console.error);
 if(Notification.permission!=="granted"&&Notification.permission!=="denied") Notification.requestPermission();
 
+// iOS 홈화면 앱 모드 감지 → 안내 UI 표시
+if(isIOS&&isStandalone){
+    document.getElementById('normal-login-btn').style.display='none';
+    document.getElementById('ios-standalone-guide').style.display='block';
+}
+
+function openInSafari(){
+    // Safari로 현재 페이지 열기 (홈화면 앱에서 Safari로 전환)
+    window.location.href='https://tigerss7.github.io/first_ss/';
+}
+
+// redirect 결과 처리 (Safari에서 로그인 후 돌아올 때)
 auth.getRedirectResult().then(result=>{
-    if(result&&result.user) console.log('redirect login ok');
-}).catch(err=>{if(err.code!=='auth/no-current-user')console.error(err);});
+    if(result&&result.user) console.log('redirect login success');
+}).catch(err=>{ console.error('redirect error',err); });
+
 auth.onAuthStateChanged(user=>{
     document.getElementById('loading-screen').style.display='none';
     if(user){
@@ -180,13 +214,13 @@ auth.onAuthStateChanged(user=>{
 
 function loginWithGoogle(){
     const provider=new firebase.auth.GoogleAuthProvider();
-    const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
     if(isIOS){
         auth.signInWithRedirect(provider).catch(err=>alert('로그인 실패: '+err.message));
     } else {
         auth.signInWithPopup(provider).catch(err=>alert('로그인 실패: '+err.message));
     }
 }
+
 function logout(){if(!confirm('로그아웃 하시겠어요?'))return;auth.signOut();}
 
 function startListeners(){
@@ -245,7 +279,6 @@ function getGcalUrl(text,dateStr){
     const d=new Date(dateStr),fmt=d.toISOString().replace(/[-:]/g,'').split('.')[0]+"Z";
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(text)}&dates=${fmt}/${fmt}`;
 }
-
 function renderTodos(){
     const container=document.getElementById('todo-list');
     document.getElementById('s-total').innerText=todos.length;
@@ -279,7 +312,6 @@ function renderMemos(){
     if(memos.length===0){container.innerHTML='<div class="empty">메모가 없습니다.</div>';return;}
     container.innerHTML=memos.map(m=>`<div class="item"><div class="item-content"><div style="font-weight:bold;">${m.title||'제목 없음'}</div><div style="font-size:13px;color:#666;white-space:pre-wrap;">${m.body}</div></div><button class="btn-del" onclick="delMemo('${m.firestoreId}')">×</button></div>`).join('');
 }
-
 const canvas=document.createElement('canvas');canvas.width=32;canvas.height=32;const ctx=canvas.getContext('2d');
 function setFavicon(color){
     ctx.clearRect(0,0,32,32);
