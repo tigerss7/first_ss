@@ -158,6 +158,9 @@ let currentUser=null,todos=[],memos=[],unsubTodos=null,unsubMemos=null,blinker=n
 if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(console.error);
 if(Notification.permission!=="granted"&&Notification.permission!=="denied") Notification.requestPermission();
 
+auth.getRedirectResult().then(result=>{
+    if(result&&result.user) console.log('redirect login ok');
+}).catch(err=>{if(err.code!=='auth/no-current-user')console.error(err);});
 auth.onAuthStateChanged(user=>{
     document.getElementById('loading-screen').style.display='none';
     if(user){
@@ -177,7 +180,12 @@ auth.onAuthStateChanged(user=>{
 
 function loginWithGoogle(){
     const provider=new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).catch(err=>alert('로그인 실패: '+err.message));
+    const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+    if(isIOS){
+        auth.signInWithRedirect(provider).catch(err=>alert('로그인 실패: '+err.message));
+    } else {
+        auth.signInWithPopup(provider).catch(err=>alert('로그인 실패: '+err.message));
+    }
 }
 function logout(){if(!confirm('로그아웃 하시겠어요?'))return;auth.signOut();}
 
