@@ -21,17 +21,14 @@
         body{background:#fff;color:#333;line-height:1.6;padding-top:calc(var(--safe-top) + 16px);padding-bottom:calc(var(--safe-bottom) + 16px);padding-left:16px;padding-right:16px;}
         .app{max-width:600px;margin:0 auto;}
         
-        /* 로딩 스피너 */
         #loading-screen{display:flex;align-items:center;justify-content:center;min-height:80vh;flex-direction:column;gap:14px;}
         .spinner{width:36px;height:36px;border:3px solid #eee;border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;}
         @keyframes spin{to{transform:rotate(360deg);}}
 
-        /* 로그인 섹션 */
         #login-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;text-align:center;padding:20px;}
         .btn-google{display:flex;align-items:center;gap:12px;background:white;border:1px solid #ddd;padding:14px 24px;border-radius:12px;cursor:pointer;font-size:15px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:12px;}
         .btn-google img{width:22px;height:22px;}
         
-        /* 아이폰 설치 안내 가이드 스타일 */
         .ios-install-guide {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
             background: #1a5fa8; color: white; padding: 18px 24px;
@@ -41,13 +38,11 @@
         }
         @keyframes slideUp { from { bottom: -100px; opacity: 0; } to { bottom: 30px; opacity: 1; } }
 
-        /* 기존 앱 UI 스타일 (생략 없이 유지) */
         #main-app{display:none;}
         .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:8px;}
         .header-left{display:flex;align-items:center;gap:8px;}
         .user-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;border:1px solid #eee;}
         .user-name{font-size:11px;color:#888;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-        .sync-badge{font-size:11px;padding:2px 8px;border-radius:10px;background:#d3f9d8;color:#2f9e44;}
         .btn-logout{background:none;border:1px solid #ddd;padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;color:#666;}
         .tabs{display:flex;gap:5px;background:var(--bg-soft);padding:5px;border-radius:10px;}
         .tab{padding:8px 18px;border:none;border-radius:7px;cursor:pointer;background:transparent;font-size:13px;transition:0.2s;}
@@ -79,9 +74,9 @@
 </div>
 
 <div id="login-screen">
-    <div class="login-icon">📋</div>
-    <div class="login-title">나의 완벽한 비서</div>
-    <div class="login-sub">모든 기기에서 데이터를 동기화합니다</div>
+    <div class="login-icon" style="font-size:40px;margin-bottom:10px;">📋</div>
+    <div class="login-title" style="font-size:24px;font-weight:bold;margin-bottom:5px;">나의 완벽한 비서</div>
+    <div class="login-sub" style="font-size:14px;color:#888;margin-bottom:25px;">모든 기기에서 데이터를 동기화합니다</div>
     <button class="btn-google" onclick="loginWithGoogle()">
         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
         Google로 로그인
@@ -133,7 +128,7 @@
 </div>
 
 <script>
-// 1. 설정
+// 1. Firebase 초기 설정
 const firebaseConfig={apiKey:"AIzaSyDIqijLagXNJborvELQ60Uop6mzUK2jB_Y",authDomain:"tirerss7.firebaseapp.com",projectId:"tirerss7",storageBucket:"tirerss7.firebasestorage.app",messagingSenderId:"1093160433471",appId:"1:1093160433471:web:d77341ee31f77442ee058a"};
 firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
@@ -142,57 +137,63 @@ const db=firebase.firestore();
 const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 const isStandalone = window.navigator.standalone === true;
 
-// 2. 서비스 워커 등록 (로딩 지연 방지를 위해 지연 실행)
+// 2. 서비스 워커 등록
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
 });
 
-// 3. 아이폰 전용 설치 안내 표시 (사파리에서만 노출)
+// 3. 아이폰 설치 가이드
 if (isIOS && !isStandalone) {
     const guide = document.createElement('div');
     guide.className = 'ios-install-guide';
-    guide.innerHTML = `
-        앱처럼 편리하게 사용하려면 <br>
-        하단의 <b>공유 버튼(사각형에 ↑)</b>을 누르고 <br>
-        <b>'홈 화면에 추가'</b>를 선택해주세요! 📲
-    `;
+    guide.innerHTML = `앱 사용을 위해 하단의 <b>공유 버튼(↑)</b>을 누르고<br><b>'홈 화면에 추가'</b>를 선택해주세요! 📲`;
     document.body.appendChild(guide);
-    setTimeout(() => guide.remove(), 10000); // 10초 후 자동 소멸
+    setTimeout(() => guide.remove(), 10000);
 }
 
-// 4. 인증 상태 감지 (무한 로딩 방지용 예외 처리 포함)
-    if (!isStandalone && !sessionStorage.getItem('reloaded')) {
+// 4. 로딩 꼬임 방지 강제 새로고침
+if (!isStandalone && !sessionStorage.getItem('reloaded')) {
     sessionStorage.setItem('reloaded', 'true');
     window.location.reload();
 }
 
-auth.onAuthStateChanged(user => {
-    document.getElementById('loading-screen').style.display='none';
-    if(user){
-        currentUser=user;
-        document.getElementById('user-avatar').src=user.photoURL || '';
-        document.getElementById('user-name').textContent=user.displayName || user.email;
-        document.getElementById('login-screen').style.display='none';
-        document.getElementById('main-app').style.display='block';
-        startListeners();
-    } else {
-        currentUser=null;
-        document.getElementById('main-app').style.display='none';
-        document.getElementById('login-screen').style.display='flex';
-    }
-});
+// 5. 로그인 상태 유지 및 인증 상태 감지 (핵심 수정!)
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+    .then(() => {
+        return auth.onAuthStateChanged(user => {
+            document.getElementById('loading-screen').style.display='none';
+            if(user){
+                currentUser=user;
+                document.getElementById('user-avatar').src=user.photoURL || '';
+                document.getElementById('user-name').textContent=user.displayName || user.email;
+                document.getElementById('login-screen').style.display='none';
+                document.getElementById('main-app').style.display='block';
+                startListeners();
+            } else {
+                currentUser=null;
+                document.getElementById('main-app').style.display='none';
+                document.getElementById('login-screen').style.display='flex';
+                stopListeners();
+            }
+        });
+    })
+    .catch(error => console.error("인증 설정 오류:", error));
 
 function loginWithGoogle(){
     const provider = new firebase.auth.GoogleAuthProvider();
-    if(isIOS) auth.signInWithRedirect(provider);
-    else auth.signInWithPopup(provider);
+    // 아이폰 브라우저에서는 Redirect, 설치된 앱이나 안드로이드에서는 Popup 사용
+    if(isIOS && !isStandalone) {
+        auth.signInWithRedirect(provider);
+    } else {
+        auth.signInWithPopup(provider);
+    }
 }
 
-function logout(){ if(confirm('로그아웃?')) auth.signOut(); }
+function logout(){ if(confirm('로그아웃 하시겠습니까?')) auth.signOut(); }
 
-// 5. 실시간 리스너 및 기능
+// 6. 데이터 리스너 및 렌더링
 let todos=[], memos=[], unsubTodos=null, unsubMemos=null, currentUser=null;
 
 function startListeners(){
@@ -220,19 +221,19 @@ async function addTodo(){
 }
 
 async function toggleTodo(fid, cur){ await db.collection('users').doc(currentUser.uid).collection('todos').doc(fid).update({done: !cur}); }
-async function delTodo(fid){ if(confirm('삭제?')) await db.collection('users').doc(currentUser.uid).collection('todos').doc(fid).delete(); }
+async function delTodo(fid){ if(confirm('삭제하시겠습니까?')) await db.collection('users').doc(currentUser.uid).collection('todos').doc(fid).delete(); }
 
 function renderTodos(){
     const container=document.getElementById('todo-list');
     document.getElementById('s-total').innerText=todos.length;
     document.getElementById('s-done').innerText=todos.filter(x=>x.done).length;
     document.getElementById('s-left').innerText=todos.filter(x=>!x.done).length;
-    if(todos.length===0){container.innerHTML='<div class="empty">목록이 비었습니다.</div>';return;}
+    if(todos.length===0){container.innerHTML='<div style="text-align:center;padding:40px;color:#ccc;">목록이 비었습니다.</div>';return;}
     container.innerHTML = todos.map(t => `
         <div class="item ${t.done?'done':''} ${(!t.done && t.date && new Date(t.date.replace('T',' ')) < new Date())?'urgent':''}">
             <input type="checkbox" style="width:20px;height:20px;margin-top:4px;" ${t.done?'checked':''} onchange="toggleTodo('${t.fid}',${t.done})">
             <div style="flex:1; min-width:0;">
-                <div class="item-text">${t.text}</div>
+                <div class="item-text" style="${t.done?'text-decoration:line-through;color:#aaa;':''}">${t.text}</div>
                 <div style="font-size:11px;color:#999;">${t.priority} | ${t.date?t.date.replace('T',' '):'기한없음'}</div>
             </div>
             <button class="btn-del" onclick="delTodo('${t.fid}')">×</button>
@@ -250,13 +251,12 @@ async function addMemo(){
 
 function renderMemos(){
     const container=document.getElementById('memo-list');
-    if(memos.length===0){container.innerHTML='<div class="empty">메모가 없습니다.</div>';return;}
+    if(memos.length===0){container.innerHTML='<div style="text-align:center;padding:40px;color:#ccc;">메모가 없습니다.</div>';return;}
     container.innerHTML = memos.map(m => `<div class="item"><div style="flex:1;"><b>${m.title||'제목없음'}</b><div style="font-size:13px;color:#666;white-space:pre-wrap;">${m.body}</div></div><button class="btn-del" onclick="delMemo('${m.fid}')">×</button></div>`).join('');
 }
-async function delMemo(fid){ if(confirm('삭제?')) await db.collection('users').doc(currentUser.uid).collection('memos').doc(fid).delete(); }
+async function delMemo(fid){ if(confirm('삭제하시겠습니까?')) await db.collection('users').doc(currentUser.uid).collection('memos').doc(fid).delete(); }
 
 function triggerAlert(text){
-    if(Notification.permission==="granted") new Notification("⏰ 알림!", {body:text});
     document.getElementById('alert-msg').innerText=text;
     document.getElementById('alert-overlay').style.display='flex';
 }
