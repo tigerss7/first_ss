@@ -1,4 +1,4 @@
-const CACHE = 'kimsecretary-v1';
+const CACHE = 'kimsecretary-v2';
 const ASSETS = [
   './',
   './index.html',
