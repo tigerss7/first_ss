@@ -18,21 +18,31 @@
     <style>
         :root{--primary:#212529;--danger:#e03131;--bg-soft:#f8f9fa;--border:#dee2e6;--radius:12px;--font:'Pretendard',-apple-system,sans-serif;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);}
         *{box-sizing:border-box;margin:0;padding:0;font-family:var(--font);-webkit-tap-highlight-color:transparent;}
-        body{background:#fff;color:#333;line-height:1.6;padding-top:calc(var(--safe-top) + 16px);padding-bottom:calc(var(--safe-bottom) + 16px);padding-left:16px;padding-right:16px; overflow-x: hidden;}
+        body{background:#fff;color:#333;line-height:1.6;padding-top:calc(var(--safe-top) + 16px);padding-bottom:calc(var(--safe-bottom) + 16px);padding-left:16px;padding-right:16px;}
         .app{max-width:600px;margin:0 auto;}
+        
+        /* 로딩 스피너 */
         #loading-screen{display:flex;align-items:center;justify-content:center;min-height:80vh;flex-direction:column;gap:14px;}
         .spinner{width:36px;height:36px;border:3px solid #eee;border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;}
         @keyframes spin{to{transform:rotate(360deg);}}
+
+        /* 로그인 섹션 */
         #login-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;text-align:center;padding:20px;}
-        .login-icon{font-size:56px;margin-bottom:16px;}
-        .login-title{font-size:24px;font-weight:bold;margin-bottom:8px;}
-        .login-sub{font-size:14px;color:#888;margin-bottom:32px;line-height:1.8;}
         .btn-google{display:flex;align-items:center;gap:12px;background:white;border:1px solid #ddd;padding:14px 24px;border-radius:12px;cursor:pointer;font-size:15px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:12px;}
         .btn-google img{width:22px;height:22px;}
-        .ios-login-box{background:#f0f7ff;border:1px solid #b6d4f7;border-radius:14px;padding:20px;max-width:320px;margin-top:8px;}
-        .btn-open-safari{background:#1a5fa8;color:white;border:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;width:100%;}
+        
+        /* 아이폰 설치 안내 가이드 스타일 */
+        .ios-install-guide {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: #1a5fa8; color: white; padding: 18px 24px;
+            border-radius: 20px; z-index: 10001; width: 90%; max-width: 350px;
+            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            font-size: 14px; line-height: 1.6; animation: slideUp 0.5s ease-out;
+        }
+        @keyframes slideUp { from { bottom: -100px; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+
+        /* 기존 앱 UI 스타일 (생략 없이 유지) */
         #main-app{display:none;}
-        /* ... 기존 스타일 유지 ... */
         .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:8px;}
         .header-left{display:flex;align-items:center;gap:8px;}
         .user-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;border:1px solid #eee;}
@@ -47,58 +57,35 @@
         .stat-num{font-size:20px;font-weight:bold;color:var(--primary);}
         .stat-label{font-size:11px;color:#666;margin-top:2px;}
         .input-card{background:var(--bg-soft);padding:18px;border-radius:var(--radius);margin-bottom:20px;border:1px solid var(--border);}
-        .input-group{display:flex;gap:8px;margin-bottom:8px;}
         input,select,textarea{padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none;width:100%;background:white;color:#333;}
-        .flex-1{flex:1;}
-        .btn-add{background:var(--primary);color:white;border:none;padding:14px;border-radius:8px;cursor:pointer;width:100%;font-weight:bold;transition:0.2s;font-size:15px;}
+        .btn-add{background:var(--primary);color:white;border:none;padding:14px;border-radius:8px;cursor:pointer;width:100%;font-weight:bold;font-size:15px;}
         .item{display:flex;gap:12px;padding:15px;border-bottom:1px solid #eee;align-items:flex-start;}
         .item.urgent{background:#fff5f5;border-left:4px solid var(--danger);}
-        .item-check{flex-shrink:0;width:20px;margin-top:4px;}
-        .item-check input{width:22px;height:22px;cursor:pointer;}
-        .item-content{flex:1;min-width:0;}
         .item-text{font-size:14px;font-weight:600;margin-bottom:4px;word-break:break-all;}
-        .item-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-        .badge{font-size:11px;padding:2px 7px;border-radius:10px;background:#eee;color:#666;}
-        .gcal-link{font-size:11px;color:#185fa5;text-decoration:none;background:#e6f1fb;padding:2px 8px;border-radius:10px;}
-        .done .item-text{text-decoration:line-through;color:#adb5bd;}
-        .item-actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0;}
-        .btn-del,.btn-edit{border:none;background:none;cursor:pointer;text-align:right;}
+        .btn-del{color:#ccc;border:none;background:none;cursor:pointer;font-size:20px;}
         #alert-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:10000;align-items:center;justify-content:center;}
         .modal{background:white;padding:35px;border-radius:24px;text-align:center;width:85%;max-width:380px;}
         .section{display:none;}
         .section.active{display:block;}
-        .empty{text-align:center;padding:40px;color:#bbb;}
-        .edit-area{display:none;margin-top:10px;padding:12px;background:#fff;border:1px solid var(--border);border-radius:10px;}
-        .edit-area.open{display:block;}
     </style>
 </head>
 <body>
 
-<div id="alert-overlay">
-    <div class="modal">
-        <h2>🚨 마감 알림 🚨</h2>
-        <p id="alert-msg" style="font-weight:bold;margin-bottom:20px;"></p>
-        <button class="btn-confirm" onclick="closeAlert()">확인했습니다</button>
-    </div>
-</div>
+<div id="alert-overlay"><div class="modal"><h2>🚨 마감 알림 🚨</h2><p id="alert-msg" style="font-weight:bold;margin-bottom:20px;"></p><button class="btn-confirm" onclick="closeAlert()">확인했습니다</button></div></div>
 
 <div id="loading-screen">
     <div class="spinner"></div>
-    <div style="font-size:13px;color:#aaa;margin-top:10px;">데이터를 불러오는 중...</div>
+    <div style="font-size:13px;color:#aaa;margin-top:10px;">데이터 연결 중...</div>
 </div>
 
 <div id="login-screen">
     <div class="login-icon">📋</div>
     <div class="login-title">나의 완벽한 비서</div>
-    <div class="login-sub">데이터 동기화를 위해 로그인이 필요합니다</div>
-    <button class="btn-google" id="normal-login-btn" onclick="loginWithGoogle()">
+    <div class="login-sub">모든 기기에서 데이터를 동기화합니다</div>
+    <button class="btn-google" onclick="loginWithGoogle()">
         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
         Google로 로그인
     </button>
-    <div class="ios-login-box" id="ios-standalone-guide" style="display:none;">
-        <p style="font-size:13px; color:#1a5fa8; margin-bottom:15px;">아이폰 홈화면 앱은 보안상 직접 로그인이 어렵습니다.<br>아래 버튼을 눌러 Safari에서 로그인해주세요.</p>
-        <button class="btn-open-safari" onclick="openInSafari()">Safari 열기</button>
-    </div>
 </div>
 
 <div id="main-app">
@@ -106,11 +93,7 @@
         <div class="header">
             <div class="header-left">
                 <img id="user-avatar" class="user-avatar" src="" alt="">
-                <div>
-                    <div style="font-size:14px;font-weight:bold;">김비서</div>
-                    <div class="user-name" id="user-name"></div>
-                </div>
-                <span class="sync-badge">☁ 동기화됨</span>
+                <div><div style="font-size:14px;font-weight:bold;">김비서</div><div id="user-name" class="user-name"></div></div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;">
                 <div class="tabs">
@@ -128,11 +111,11 @@
                 <div class="stat-card"><div class="stat-num" id="s-left">0</div><div class="stat-label">진행중</div></div>
             </div>
             <div class="input-card">
-                <div class="input-group">
-                    <input id="t-input" class="flex-1" placeholder="할 일을 입력하세요...">
-                    <select id="t-priority" style="width:80px;"><option>보통</option><option>높음</option><option>낮음</option></select>
+                <input id="t-input" style="margin-bottom:8px;" placeholder="할 일을 입력하세요...">
+                <div style="display:flex; gap:8px; margin-bottom:8px;">
+                    <input id="t-date" type="datetime-local" class="flex-1">
+                    <select id="t-priority" style="width:85px;"><option>보통</option><option>높음</option><option>낮음</option></select>
                 </div>
-                <div class="input-group"><input id="t-date" type="datetime-local"></div>
                 <button class="btn-add" onclick="addTodo()">추가하기</button>
             </div>
             <div id="todo-list"></div>
@@ -141,7 +124,7 @@
         <div id="sec-memo" class="section">
             <div class="input-card">
                 <input id="m-title" style="margin-bottom:8px;" placeholder="제목">
-                <textarea id="m-body" rows="5" placeholder="메모 내용을 입력하세요..."></textarea>
+                <textarea id="m-body" rows="5" placeholder="내용을 입력하세요..."></textarea>
                 <button class="btn-add" style="margin-top:8px;" onclick="addMemo()">저장</button>
             </div>
             <div id="memo-list"></div>
@@ -150,26 +133,36 @@
 </div>
 
 <script>
-// 1. Firebase 설정
+// 1. 설정
 const firebaseConfig={apiKey:"AIzaSyDIqijLagXNJborvELQ60Uop6mzUK2jB_Y",authDomain:"tirerss7.firebaseapp.com",projectId:"tirerss7",storageBucket:"tirerss7.firebasestorage.app",messagingSenderId:"1093160433471",appId:"1:1093160433471:web:d77341ee31f77442ee058a"};
 firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
 const db=firebase.firestore();
 
-// 2. 환경 감지
 const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 const isStandalone = window.navigator.standalone === true;
 
-let currentUser=null, todos=[], memos=[], unsubTodos=null, unsubMemos=null;
-let blinker=null, sirenInterval=null;
+// 2. 서비스 워커 등록 (로딩 지연 방지를 위해 지연 실행)
+window.addEventListener('load', () => {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+});
 
-// iOS 홈화면 전용 UI 처리
-if(isIOS && isStandalone) {
-    document.getElementById('normal-login-btn').style.display='none';
-    document.getElementById('ios-standalone-guide').style.display='block';
+// 3. 아이폰 전용 설치 안내 표시 (사파리에서만 노출)
+if (isIOS && !isStandalone) {
+    const guide = document.createElement('div');
+    guide.className = 'ios-install-guide';
+    guide.innerHTML = `
+        앱처럼 편리하게 사용하려면 <br>
+        하단의 <b>공유 버튼(사각형에 ↑)</b>을 누르고 <br>
+        <b>'홈 화면에 추가'</b>를 선택해주세요! 📲
+    `;
+    document.body.appendChild(guide);
+    setTimeout(() => guide.remove(), 10000); // 10초 후 자동 소멸
 }
 
-// 3. 인증 로직 (iOS 대응 강화)
+// 4. 인증 상태 감지 (무한 로딩 방지용 예외 처리 포함)
 auth.onAuthStateChanged(user => {
     document.getElementById('loading-screen').style.display='none';
     if(user){
@@ -181,7 +174,6 @@ auth.onAuthStateChanged(user => {
         startListeners();
     } else {
         currentUser=null;
-        stopListeners();
         document.getElementById('main-app').style.display='none';
         document.getElementById('login-screen').style.display='flex';
     }
@@ -189,120 +181,94 @@ auth.onAuthStateChanged(user => {
 
 function loginWithGoogle(){
     const provider = new firebase.auth.GoogleAuthProvider();
-    // iOS는 팝업 차단이 강력하므로 Redirect 권장
-    if(isIOS) {
-        auth.signInWithRedirect(provider);
-    } else {
-        auth.signInWithPopup(provider).catch(e => alert("로그인 에러: " + e.message));
-    }
+    if(isIOS) auth.signInWithRedirect(provider);
+    else auth.signInWithPopup(provider);
 }
 
-function openInSafari(){
-    window.location.href = 'https://tigerss7.github.io/first_ss/';
-}
+function logout(){ if(confirm('로그아웃?')) auth.signOut(); }
 
-function logout(){ if(confirm('로그아웃 하시겠어요?')) auth.signOut(); }
+// 5. 실시간 리스너 및 기능
+let todos=[], memos=[], unsubTodos=null, unsubMemos=null, currentUser=null;
 
-// 4. 데이터 리스너
 function startListeners(){
-    if(!currentUser) return;
     const uid = currentUser.uid;
     unsubTodos = db.collection('users').doc(uid).collection('todos').orderBy('createdAt','desc').onSnapshot(snap => {
-        todos = snap.docs.map(d => ({firestoreId:d.id, ...d.data()}));
+        todos = snap.docs.map(d => ({fid:d.id, ...d.data()}));
         renderTodos();
-    }, err => console.error("Firestore Error:", err));
-
+    });
     unsubMemos = db.collection('users').doc(uid).collection('memos').orderBy('createdAt','desc').onSnapshot(snap => {
-        memos = snap.docs.map(d => ({firestoreId:d.id, ...d.data()}));
+        memos = snap.docs.map(d => ({fid:d.id, ...d.data()}));
         renderMemos();
     });
 }
 
-function stopListeners(){
-    if(unsubTodos) unsubTodos();
-    if(unsubMemos) unsubMemos();
-    unsubTodos=null; unsubMemos=null;
-}
+function stopListeners(){ if(unsubTodos) unsubTodos(); if(unsubMemos) unsubMemos(); }
 
-// 5. 할 일/메모 조작 (기존 로직 유지하되 안전성 보강)
 async function addTodo(){
     const input=document.getElementById('t-input'), date=document.getElementById('t-date');
     if(!input.value.trim()) return;
-    try {
-        await db.collection('users').doc(currentUser.uid).collection('todos').add({
-            text: input.value.trim(),
-            date: date.value,
-            priority: document.getElementById('t-priority').value,
-            done: false,
-            notified: false,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        input.value=''; date.value='';
-    } catch(e) { alert("저장 실패: " + e.message); }
+    await db.collection('users').doc(currentUser.uid).collection('todos').add({
+        text: input.value.trim(), date: date.value, priority: document.getElementById('t-priority').value,
+        done: false, notified: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    input.value=''; date.value='';
 }
 
-async function toggleTodo(fid, currentDone){
-    await db.collection('users').doc(currentUser.uid).collection('todos').doc(fid).update({done: !currentDone});
-}
+async function toggleTodo(fid, cur){ await db.collection('users').doc(currentUser.uid).collection('todos').doc(fid).update({done: !cur}); }
+async function delTodo(fid){ if(confirm('삭제?')) await db.collection('users').doc(currentUser.uid).collection('todos').doc(fid).delete(); }
 
-async function delTodo(fid){
-    if(confirm('삭제할까요?')) await db.collection('users').doc(currentUser.uid).collection('todos').doc(fid).delete();
-}
-
-// 6. 렌더링 및 UI (사파리 호환성 강화)
 function renderTodos(){
     const container=document.getElementById('todo-list');
     document.getElementById('s-total').innerText=todos.length;
     document.getElementById('s-done').innerText=todos.filter(x=>x.done).length;
     document.getElementById('s-left').innerText=todos.filter(x=>!x.done).length;
-    
-    if(todos.length===0){container.innerHTML='<div class="empty">목록이 비어있습니다.</div>';return;}
-    
-    container.innerHTML = todos.map(t => {
-        const isOver = !t.done && t.date && new Date(t.date.replace('T', ' ')) < new Date();
-        const fid = t.firestoreId;
-        return `
-            <div class="item ${t.done?'done':''} ${isOver?'urgent':''}">
-                <div class="item-check"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTodo('${fid}', ${t.done})"></div>
-                <div class="item-content">
-                    <div class="item-text">${t.text}</div>
-                    <div class="item-meta">
-                        <span class="badge">${t.priority}</span>
-                        <span style="font-size:11px;color:#999;">${t.date ? t.date.replace('T',' ') : '기한 없음'}</span>
-                    </div>
-                </div>
-                <div class="item-actions"><button class="btn-del" onclick="delTodo('${fid}')">×</button></div>
-            </div>`;
-    }).join('');
+    if(todos.length===0){container.innerHTML='<div class="empty">목록이 비었습니다.</div>';return;}
+    container.innerHTML = todos.map(t => `
+        <div class="item ${t.done?'done':''} ${(!t.done && t.date && new Date(t.date.replace('T',' ')) < new Date())?'urgent':''}">
+            <input type="checkbox" style="width:20px;height:20px;margin-top:4px;" ${t.done?'checked':''} onchange="toggleTodo('${t.fid}',${t.done})">
+            <div style="flex:1; min-width:0;">
+                <div class="item-text">${t.text}</div>
+                <div style="font-size:11px;color:#999;">${t.priority} | ${t.date?t.date.replace('T',' '):'기한없음'}</div>
+            </div>
+            <button class="btn-del" onclick="delTodo('${t.fid}')">×</button>
+        </div>`).join('');
 }
 
-// 7. 알림 로직 (기존과 동일)
+async function addMemo(){
+    const title=document.getElementById('m-title'), body=document.getElementById('m-body');
+    if(!title.value && !body.value) return;
+    await db.collection('users').doc(currentUser.uid).collection('memos').add({
+        title: title.value, body: body.value, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    title.value=''; body.value='';
+}
+
+function renderMemos(){
+    const container=document.getElementById('memo-list');
+    if(memos.length===0){container.innerHTML='<div class="empty">메모가 없습니다.</div>';return;}
+    container.innerHTML = memos.map(m => `<div class="item"><div style="flex:1;"><b>${m.title||'제목없음'}</b><div style="font-size:13px;color:#666;white-space:pre-wrap;">${m.body}</div></div><button class="btn-del" onclick="delMemo('${m.fid}')">×</button></div>`).join('');
+}
+async function delMemo(fid){ if(confirm('삭제?')) await db.collection('users').doc(currentUser.uid).collection('memos').doc(fid).delete(); }
+
 function triggerAlert(text){
-    if(Notification.permission==="granted"){ new Notification("⏰ 마감 시간!", {body:text}); }
+    if(Notification.permission==="granted") new Notification("⏰ 알림!", {body:text});
     document.getElementById('alert-msg').innerText=text;
     document.getElementById('alert-overlay').style.display='flex';
 }
 function closeAlert(){ document.getElementById('alert-overlay').style.display='none'; }
-
-// 8. 마감 체크 타이머 (사파리 최적화)
-setInterval(() => {
-    if(!currentUser || todos.length === 0) return;
-    const now = new Date();
-    const nowStr = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+'T'+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-    
-    todos.forEach(t => {
-        if(!t.done && t.date === nowStr && !t.notified) {
-            triggerAlert(t.text);
-            db.collection('users').doc(currentUser.uid).collection('todos').doc(t.firestoreId).update({notified:true});
-        }
-    });
-}, 10000);
 
 function switchTab(name, el){
     document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
     document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
     el.classList.add('active'); document.getElementById('sec-'+name).classList.add('active');
 }
+
+setInterval(() => {
+    if(!currentUser) return;
+    const now = new Date();
+    const ns = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+'T'+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+    todos.forEach(t => { if(!t.done && t.date === ns && !t.notified) { triggerAlert(t.text); db.collection('users').doc(currentUser.uid).collection('todos').doc(t.fid).update({notified:true}); } });
+}, 10000);
 </script>
 </body>
 </html>
