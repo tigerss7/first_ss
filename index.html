@@ -246,7 +246,11 @@ if(isIOS&&isStandalone){
 }
 function openInSafari(){ window.location.href='https://tigerss7.github.io/first_ss/'; }
 
-auth.getRedirectResult().catch(()=>{});
+auth.getRedirectResult().then(result=>{
+    if(result && result.user){ alert('리다이렉트 로그인 성공: '+result.user.email); }
+}).catch(err=>{
+    alert('리다이렉트 에러: ['+err.code+'] '+err.message);
+});
 auth.onAuthStateChanged(user=>{
     document.getElementById('loading-screen').style.display='none';
     if(user){
