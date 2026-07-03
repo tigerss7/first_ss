@@ -238,7 +238,7 @@ const isStandalone=window.navigator.standalone===true;
 let currentUser=null,todos=[],memos=[],unsubTodos=null,unsubMemos=null,blinker=null,sirenInterval=null;
 
 if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
-if(Notification.in window && Notification.permission!=='granted' && Notification.permission!=='denied') Notification.requestPermission();
+if('Notification' in window && Notification.permission!=='granted' && Notification.permission!=='denied') Notification.requestPermission();
 
 if(isIOS&&isStandalone){
     document.getElementById('normal-login-btn').style.display='none';
