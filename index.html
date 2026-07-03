@@ -248,11 +248,6 @@ if(isIOS&&isStandalone){
 }
 function openInSafari(){ window.location.href='https://tigerss7.github.io/first_ss/'; }
 
-auth.getRedirectResult().then(result=>{
-    if(result && result.user){ alert('리다이렉트 로그인 성공: '+result.user.email); }
-}).catch(err=>{
-    alert('리다이렉트 에러: ['+err.code+'] '+err.message);
-});
 auth.onAuthStateChanged(user=>{
     document.getElementById('loading-screen').style.display='none';
     if(user){
@@ -272,8 +267,7 @@ auth.onAuthStateChanged(user=>{
 
 function loginWithGoogle(){
     const provider=new firebase.auth.GoogleAuthProvider();
-    if(isIOS){ auth.signInWithRedirect(provider); }
-    else { auth.signInWithPopup(provider).catch(err=>alert('로그인 실패: '+err.message)); }
+    auth.signInWithPopup(provider).catch(err=>alert('로그인 실패: ['+err.code+'] '+err.message));
 }
 function logout(){ if(!confirm('로그아웃 하시겠어요?'))return; if('clearAppBadge' in navigator)navigator.clearAppBadge(); auth.signOut(); }
 
