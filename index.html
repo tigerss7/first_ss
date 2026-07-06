@@ -406,8 +406,13 @@ function renderTodos(){
     document.getElementById('s-done').innerText=todos.filter(x=>x.done).length;
     document.getElementById('s-left').innerText=todos.filter(x=>!x.done).length;
 
-    const active=todos.filter(t=>!t.done);
-    const done=todos.filter(t=>t.done);
+    const active=todos.filter(t=>!t.done).sort((a,b)=>{
+    if(!a.date && !b.date) return 0;
+    if(!a.date) return 1;
+    if(!b.date) return -1;
+    return new Date(a.date)-new Date(b.date);
+});
+const done=todos.filter(t=>t.done);
 
     updateBadge(active.length);
 
